@@ -1,5 +1,6 @@
 # AirDC++ Stream
 
+[![Build](https://github.com/jmoruno/airdcpp-stream/actions/workflows/docker.yml/badge.svg?branch=main)](https://github.com/jmoruno/airdcpp-stream/actions/workflows/docker.yml) [![CodeQL](https://github.com/jmoruno/airdcpp-stream/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/jmoruno/airdcpp-stream/actions/workflows/codeql.yml) [![Trivy](https://github.com/jmoruno/airdcpp-stream/actions/workflows/trivy.yml/badge.svg?branch=main)](https://github.com/jmoruno/airdcpp-stream/actions/workflows/trivy.yml) [![Release](https://img.shields.io/github/v/release/jmoruno/airdcpp-stream)](https://github.com/jmoruno/airdcpp-stream/releases/latest) [![Docker pulls](https://img.shields.io/docker/pulls/jmorunofdz/airdcpp-stream)](https://hub.docker.com/r/jmorunofdz/airdcpp-stream) [![Image size](https://img.shields.io/docker/image-size/jmorunofdz/airdcpp-stream/stable)](https://hub.docker.com/r/jmorunofdz/airdcpp-stream) [![License](https://img.shields.io/github/license/jmoruno/airdcpp-stream)](LICENSE)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/jmoruno)
 
 Addon de Stremio y Nuvio que busca en los hubs de AirDC++ (a través de
