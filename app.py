@@ -174,7 +174,10 @@ def search_bridge(kind, imdb_id, season=None, episode=None, partial=False):
         res = RES_RE.search(title)
         results.append({
             "id": release_id, "title": title, "size": size, "spanish": spanish,
-            "res": res.group(1).lower() if res else "", "peers": int(attrs.get("seeders") or 1),
+            # Si el nombre no la dice, el bridge la saca de la carpeta de AirDC++ donde esta el fichero
+            "res": res.group(1).lower() if res else (attrs.get("resolution") or ""),
+            "res_folder": not res and attrs.get("resolutionsource") == "carpeta",
+            "peers": int(attrs.get("seeders") or 1),
             "languages": languages,
         })
     results.sort(key=lambda r: (not r["spanish"], -RES_RANK.get(r["res"], 0), -r["size"]))
@@ -188,6 +191,8 @@ def to_stream(kind, result, imdb_id):
     info = f"💾 {human(result['size'])}   👥 {result['peers']}"
     if result["languages"]:
         info += "   🗣 " + ", ".join(result["languages"])
+    if result.get("res_folder"):
+        info += f"\n📁 {result['res']} según la carpeta"
     return {
         "name": f"AirDC++\n{result['res'] or '?'}{flag}",
         "title": f"{result['title']}\n{info}",
