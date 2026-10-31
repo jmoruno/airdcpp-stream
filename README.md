@@ -1,5 +1,7 @@
 # airdcpp-stream
 
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-jmoruno-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/jmoruno)
+
 Addon de Stremio y Nuvio que busca en los hubs de AirDC++ (a través de
 [airdcpp-torznab-bridge](https://github.com/jmoruno/airdcpp-torznab-bridge)) y reproduce mientras descarga.
 
@@ -33,3 +35,7 @@ Flujo de trabajo:
 1. Los cambios se hacen en una rama. Cada push publica `:<rama>`.
 2. Cuando funciona, se fusiona en `main`.
 3. Para publicar una versión: **Actions → Imagen Docker → Run workflow** en `main`, con el número de versión. Crea la etiqueta `vX.Y.Z` y la release en GitHub, y publica `:X.Y.Z` y `:latest`.
+
+## Apoyar el proyecto
+
+Si te resulta útil, puedes invitarme a un café: [buymeacoffee.com/jmoruno](https://buymeacoffee.com/jmoruno) ☕
