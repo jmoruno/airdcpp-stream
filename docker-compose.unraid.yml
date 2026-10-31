@@ -1,11 +1,7 @@
 services:
   stremio-airdcpp:
-    # Se construye desde este repositorio
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: local/airdcpp-stream:latest
-    pull_policy: build
+    # Imagen publicada por GitHub Actions desde este repositorio
+    image: jmorunofdz/airdcpp-stream:latest
     container_name: stremio-airdcpp
     environment:
       # Parte secreta de la URL del addon
