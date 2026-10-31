@@ -139,7 +139,7 @@ def absolute_episode(imdb_id, season, episode):
         return episode if season == 1 else None
 
 
-def search_bridge(kind, imdb_id, season=None, episode=None):
+def search_bridge(kind, imdb_id, season=None, episode=None, partial=False):
     bridge = BRIDGES[kind]
     params = {"apikey": BRIDGE_API_KEY, "cat": bridge["cat"], "imdbid": imdb_id}
     if kind == "movie":
@@ -150,7 +150,10 @@ def search_bridge(kind, imdb_id, season=None, episode=None):
         if absolute:
             params["absolute"] = absolute
     # Sin prisa: la busqueda sigue en segundo plano y el reproductor muestra "Buscando…" mientras
-    raw = http("GET", f"{bridge['url']}/torznab/api?{urllib.parse.urlencode(params)}", timeout=600)
+    if partial:
+        # Solo lo encontrado hasta ahora por la busqueda en curso (no lanza otra)
+        params["partial"] = "true"
+    raw = http("GET", f"{bridge['url']}/torznab/api?{urllib.parse.urlencode(params)}", timeout=15 if partial else 600)
     results = []
     for item in ET.fromstring(raw).iter("item"):
         title = item.findtext("title") or ""
@@ -233,8 +236,17 @@ def cached_search(kind, imdb_id, season=None, episode=None, wait=True):
     if not wait:
         return None, True
     if not entry["done"].wait(SEARCH_WAIT):
-        return [{"name": "AirDC++", "title": "🔄 Buscando en tus hubs…\nVuelve a abrir en unos segundos",
-                 "externalUrl": PUBLIC_URL}], True
+        # Se ensena lo encontrado hasta ahora y un aviso de que sigue buscando
+        try:
+            found = [to_stream(kind, r, imdb_id) for r in search_bridge(kind, imdb_id, season, episode, partial=True)]
+        except Exception as exc:  # noqa: BLE001
+            log(f"No se pudieron leer los resultados parciales: {exc}")
+            found = []
+        notice = {"name": "AirDC++",
+                  "title": (f"🔄 Sigue buscando en tus hubs… ({len(found)} encontrado(s) hasta ahora)\n"
+                            "Vuelve a abrir para ver más"),
+                  "externalUrl": PUBLIC_URL}
+        return [notice] + found, True
     if entry["error"]:
         with _search_lock:
             _search_cache.pop(key, None)
