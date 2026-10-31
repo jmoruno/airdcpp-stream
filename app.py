@@ -106,6 +106,39 @@ def human(size):
         size /= 1024
 
 
+CINEMETA_URL = os.environ.get("CINEMETA_URL", "https://v3-cinemeta.strem.io").rstrip("/")
+_episode_lists = {}
+_episode_lock = threading.Lock()
+
+
+def absolute_episode(imdb_id, season, episode):
+    """Numero absoluto del capitulo segun la lista de Cinemeta (T4 E14 de Dragon Ball GT = 61).
+
+    El anime y muchas series antiguas se comparten asi ("Dragon Ball GT 61"), no como S04E14.
+    """
+    if not season or not episode:
+        return None
+    with _episode_lock:
+        cached = _episode_lists.get(imdb_id)
+    if not cached or time.time() - cached[0] > 86400:
+        try:
+            meta = json.loads(http("GET", f"{CINEMETA_URL}/meta/series/{imdb_id}.json", timeout=20))
+            videos = (meta.get("meta") or {}).get("videos") or []
+            pairs = sorted({(int(v["season"]), int(v["episode"])) for v in videos
+                            if v.get("season") and v.get("episode") and int(v["season"]) > 0})
+        except Exception as exc:  # noqa: BLE001
+            log(f"No se pudo leer la lista de capitulos de {imdb_id}: {exc}")
+            pairs = None
+        # Si Cinemeta falla se reintenta a los 10 minutos en vez de esperar un dia
+        cached = (time.time(), pairs or []) if pairs is not None else (time.time() - 86400 + 600, [])
+        with _episode_lock:
+            _episode_lists[imdb_id] = cached
+    try:
+        return cached[1].index((season, episode)) + 1
+    except ValueError:
+        return episode if season == 1 else None
+
+
 def search_bridge(kind, imdb_id, season=None, episode=None):
     bridge = BRIDGES[kind]
     params = {"apikey": BRIDGE_API_KEY, "cat": bridge["cat"], "imdbid": imdb_id}
@@ -113,6 +146,9 @@ def search_bridge(kind, imdb_id, season=None, episode=None):
         params["t"] = "movie"
     else:
         params.update(t="tvsearch", season=season, ep=episode)
+        absolute = absolute_episode(imdb_id, season, episode)
+        if absolute:
+            params["absolute"] = absolute
     raw = http("GET", f"{bridge['url']}/torznab/api?{urllib.parse.urlencode(params)}", timeout=180)
     results = []
     for item in ET.fromstring(raw).iter("item"):
