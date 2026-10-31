@@ -1,0 +1,70 @@
+services:
+  stremio-airdcpp:
+    # Se construye desde este repositorio
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: local/airdcpp-stream:latest
+    pull_policy: build
+    container_name: stremio-airdcpp
+    environment:
+      # Parte secreta de la URL del addon
+      - TOKEN=${TOKEN}
+      # URL publica HTTPS (proxy inverso -> puerto 7011)
+      - PUBLIC_URL=${PUBLIC_URL}
+      - PORT=7011
+
+      # --- Bridges (los mismos que usan Radarr y Sonarr) ---
+      - BRIDGE_MOVIES_URL=${BRIDGE_MOVIES_URL}
+      - BRIDGE_SERIES_URL=${BRIDGE_SERIES_URL}
+      - BRIDGE_MOVIES_SAVE_PATH=/Downloads
+      - BRIDGE_SERIES_SAVE_PATH=/DownloadsSeries
+      - BRIDGE_API_KEY=${BRIDGE_API_KEY}
+      - BRIDGE_USERNAME=bridge
+      - BRIDGE_PASSWORD=${BRIDGE_PASSWORD}
+      # Categoria propia: Radarr/Sonarr no ven estas descargas
+      - BRIDGE_CATEGORY=stremio
+
+      # --- AirDC++ (para seguir el progreso de la descarga) ---
+      - AIRDCPP_URL=${AIRDCPP_URL}
+      - AIRDCPP_USER=admin
+      - AIRDCPP_PASS=${AIRDCPP_PASS}
+
+      # --- Biblioteca: si Radarr/Sonarr ya tienen el fichero, se reproduce directamente ---
+      - RADARR_URL=${RADARR_URL}
+      - RADARR_API_KEY=${RADARR_API_KEY}
+      - SONARR_URL=${SONARR_URL}
+      - SONARR_API_KEY=${SONARR_API_KEY}
+      # Carpeta raiz de Radarr/Sonarr = ruta montada en este contenedor (ver volumes)
+      - PATH_MAP=/video=/biblioteca/peliculas;/tv=/biblioteca/series
+      # Al reproducir algo que no conocen, darlo de alta en Radarr/Sonarr (sin monitorizar ni buscar)
+      - REGISTER_IN_ARR=true
+      - RADARR_PROFILE=Español 4k/1080p
+      - SONARR_PROFILE=Español 4k/1080p
+
+      # --- Comportamiento ---
+      - SPANISH_ONLY=true
+      - MAX_RESULTS=15
+      # Capitulos siguientes que se buscan por adelantado al abrir uno
+      - PREFETCH_EPISODES=2
+      # Segundos que espera los resultados de los hubs antes de mostrar "Buscando..."
+      - SEARCH_WAIT=20
+      # Cierra los ficheros que nadie lee desde hace X minutos (libera el espacio si FileBot ya los movio)
+      - IDLE_CLOSE_MINUTES=120
+      # MB descargados antes de empezar a reproducir
+      - START_BUFFER_MB=8
+    volumes:
+      # Mismas rutas internas que en AirDC++ (solo lectura)
+      - ${DOWNLOADS_MOVIES_DIR}:/Downloads:ro
+      - ${DOWNLOADS_SERIES_DIR}:/DownloadsSeries:ro
+      # Biblioteca (solo lectura): la misma carpeta que tienen Radarr y Sonarr como raiz
+      - ${LIBRARY_MOVIES_DIR}:/biblioteca/peliculas:ro
+      - ${LIBRARY_SERIES_DIR}:/biblioteca/series:ro
+    ports:
+      - 7011:7011
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: unless-stopped
