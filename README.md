@@ -3,10 +3,12 @@
 [![Build](https://github.com/jmoruno/airdcpp-stream/actions/workflows/docker.yml/badge.svg?branch=main)](https://github.com/jmoruno/airdcpp-stream/actions/workflows/docker.yml) [![CodeQL](https://github.com/jmoruno/airdcpp-stream/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/jmoruno/airdcpp-stream/actions/workflows/codeql.yml) [![Trivy](https://github.com/jmoruno/airdcpp-stream/actions/workflows/trivy.yml/badge.svg?branch=main)](https://github.com/jmoruno/airdcpp-stream/actions/workflows/trivy.yml) [![Release](https://img.shields.io/github/v/release/jmoruno/airdcpp-stream)](https://github.com/jmoruno/airdcpp-stream/releases/latest) [![Docker pulls](https://img.shields.io/docker/pulls/jmorunofdz/airdcpp-stream)](https://hub.docker.com/r/jmorunofdz/airdcpp-stream) [![Image size](https://img.shields.io/docker/image-size/jmorunofdz/airdcpp-stream/stable)](https://hub.docker.com/r/jmorunofdz/airdcpp-stream) [![License](https://img.shields.io/github/license/jmoruno/airdcpp-stream)](LICENSE)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/jmoruno)
 
+**Español** · [English](README.en.md)
+
 Addon de Stremio y Nuvio que busca en los hubs de AirDC++ (a través de
 [airdcpp-torznab-bridge](https://github.com/jmoruno/airdcpp-torznab-bridge)) y reproduce mientras descarga.
 
-- Resultados en castellano, con resolución, tamaño y número de fuentes.
+- Resultados en castellano (o en todos los idiomas), con resolución, tamaño y número de fuentes.
 - Resultados parciales con aviso de "🔄 Sigue buscando" mientras los hubs responden.
 - Si Radarr o Sonarr ya tienen el fichero, aparece "📁 Biblioteca" y se reproduce desde el disco.
 - Numeración absoluta para anime (Cinemeta) y búsqueda adelantada de los capítulos siguientes.
@@ -17,6 +19,8 @@ Addon de Stremio y Nuvio que busca en los hubs de AirDC++ (a través de
 | --- | --- | --- |
 | `LANGUAGE` | `es` | Idioma de los textos en Stremio y Nuvio: `es` o `en` |
 | `SPANISH_ONLY` | `true` con `es`, `false` con `en` | Mostrar solo resultados en castellano |
+
+Para hubs en inglés, pon también `TMDB_LANGUAGE=en-US` en el bridge.
 
 ## Limitaciones
 
