@@ -1,6 +1,6 @@
-# airdcpp-stream
+# AirDC++ Stream
 
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-jmoruno-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/jmoruno)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/jmoruno)
 
 Addon de Stremio y Nuvio que busca en los hubs de AirDC++ (a través de
 [airdcpp-torznab-bridge](https://github.com/jmoruno/airdcpp-torznab-bridge)) y reproduce mientras descarga.
@@ -23,18 +23,21 @@ Addon de Stremio y Nuvio que busca en los hubs de AirDC++ (a través de
 
 ## Imagen y versiones
 
-| Etiqueta | Cuándo se publica | Para qué |
+| Etiqueta | Canal | Para qué |
 | --- | --- | --- |
-| `latest` | Al publicar una versión | Producción |
-| `X.Y.Z` | Al publicar una versión | Fijar una versión concreta o volver atrás |
-| `<rama>` (p. ej. `dev`) | En cada push a esa rama | Probar sin tocar producción (otro stack, otro puerto) |
-| `sha-<commit>` | En cada build | Una build exacta |
+| `stable` / `latest` | estable | Producción: última versión estable |
+| `X.Y` / `X.Y.Z` (p. ej. `1.10.1`) | estable | Fijar una versión concreta o volver atrás |
+| `beta` / `X.Y.Z-rc.N` | beta | Versiones candidatas, antes de pasar a estable |
+| `dev` y otras ramas | desarrollo | Probar cambios sin tocar producción |
+| `sha-<commit>` | — | Una build exacta |
 
 Flujo de trabajo:
 
 1. Los cambios se hacen en una rama. Cada push publica `:<rama>`.
 2. Cuando funciona, se fusiona en `main`.
-3. Para publicar una versión: **Actions → Imagen Docker → Run workflow** en `main`, con el número de versión. Crea la etiqueta `vX.Y.Z` y la release en GitHub, y publica `:X.Y.Z` y `:latest`.
+3. Para publicar una versión: **Actions → Imagen Docker → Run workflow** en `main`, con el número de versión.
+   - **Estable** (`1.11.0`): release en GitHub y `:1.11.0`, `:1.11`, `:stable` y `:latest`.
+   - **Beta** (`1.11.0-rc.1`): pre-release en GitHub y `:1.11.0-rc.1` y `:beta`.
 
 ## Licencia
 
