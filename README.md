@@ -17,7 +17,7 @@ Addon de Stremio y Nuvio que busca en los hubs de AirDC++ (a través de
 
 ## Desplegar en Unraid (Portainer)
 
-- Stack con `docker-compose.unraid.yml` (imagen `jmorunofdz/airdcpp-stream:latest`).
+- Stack con `docker-compose.unraid.yml` (imagen `jmorunofdz/airdcpp-stream:stable`).
 - Variables del stack: las de `.env.example`.
 - Instalar en Stremio o Nuvio: `https://<PUBLIC_URL>/<TOKEN>/manifest.json`.
 
