@@ -149,7 +149,8 @@ def search_bridge(kind, imdb_id, season=None, episode=None):
         absolute = absolute_episode(imdb_id, season, episode)
         if absolute:
             params["absolute"] = absolute
-    raw = http("GET", f"{bridge['url']}/torznab/api?{urllib.parse.urlencode(params)}", timeout=180)
+    # Sin prisa: la busqueda sigue en segundo plano y el reproductor muestra "Buscando…" mientras
+    raw = http("GET", f"{bridge['url']}/torznab/api?{urllib.parse.urlencode(params)}", timeout=600)
     results = []
     for item in ET.fromstring(raw).iter("item"):
         title = item.findtext("title") or ""
@@ -239,6 +240,25 @@ def cached_search(kind, imdb_id, season=None, episode=None, wait=True):
             _search_cache.pop(key, None)
         return [{"name": "AirDC++", "title": f"⚠️ {entry['error'][:120]}", "externalUrl": PUBLIC_URL}], True
     return entry["streams"], False
+
+
+def prefetch_after(imdb_id, season, episode):
+    """Busca los siguientes capitulos cuando termina el que se va a ver, uno detras de otro.
+
+    AirDC++ deja 5 s entre busquedas y las encola: lanzarlas a la vez le quitaba turno
+    al capitulo que se esta esperando y acababa en "timed out".
+    """
+    def run():
+        for ahead in range(0, PREFETCH_EPISODES + 1):
+            if ahead:
+                cached_search("series", imdb_id, season, episode + ahead, wait=False)
+            with _search_lock:
+                entry = _search_cache.get(("series", imdb_id, season, episode + ahead))
+            if entry:
+                entry["done"].wait(900)
+
+    if PREFETCH_EPISODES > 0:
+        threading.Thread(target=run, daemon=True).start()
 
 
 # ------------------------------------------------------------------ biblioteca
@@ -663,8 +683,7 @@ class Handler(BaseHTTPRequestHandler):
                 streams, partial = cached_search("series", imdb_id, int(season), int(episode))
                 streams = mark_downloaded("series", streams)
                 # Adelanta la busqueda de los siguientes capitulos para que esten listos al llegar
-                for ahead in range(1, PREFETCH_EPISODES + 1):
-                    cached_search("series", imdb_id, int(season), int(episode) + ahead, wait=False)
+                prefetch_after(imdb_id, int(season), int(episode))
             if local:
                 streams = [library_stream(*local)] + [s for s in streams if s.get("url")]
             if not streams:
