@@ -57,7 +57,7 @@ SONARR_PROFILE = os.environ.get("SONARR_PROFILE", "")
 
 # Idioma de los textos que se ven en Stremio/Nuvio: "es" (castellano) o "en" (ingles)
 LANGUAGE = "en" if os.environ.get("LANGUAGE", "es").lower().startswith("en") else "es"
-SPANISH_ONLY = os.environ.get("SPANISH_ONLY", "true" if LANGUAGE == "es" else "false").lower() == "true"
+SPANISH_ONLY = (os.environ.get("SPANISH_ONLY") or ("true" if LANGUAGE == "es" else "false")).lower() == "true"
 MAX_RESULTS = int(os.environ.get("MAX_RESULTS", "15"))
 SEARCH_WAIT = float(os.environ.get("SEARCH_WAIT", "15"))
 PREFETCH_EPISODES = int(os.environ.get("PREFETCH_EPISODES", "2"))

@@ -42,7 +42,7 @@ services:
       # Idioma de los textos en Stremio/Nuvio: es | en
       - LANGUAGE=${LANGUAGE:-es}
       # Solo resultados en castellano (por defecto true con LANGUAGE=es y false con LANGUAGE=en)
-      - SPANISH_ONLY=${SPANISH_ONLY:-true}
+      - SPANISH_ONLY=${SPANISH_ONLY:-}
       - MAX_RESULTS=15
       # Capitulos siguientes que se buscan por adelantado al abrir uno
       - PREFETCH_EPISODES=2
