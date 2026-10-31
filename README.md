@@ -36,6 +36,20 @@ Flujo de trabajo:
 2. Cuando funciona, se fusiona en `main`.
 3. Para publicar una versión: **Actions → Imagen Docker → Run workflow** en `main`, con el número de versión. Crea la etiqueta `vX.Y.Z` y la release en GitHub, y publica `:X.Y.Z` y `:latest`.
 
+## Licencia
+
+[MIT](LICENSE): puedes usarlo, copiarlo, modificarlo y redistribuirlo libremente, también con fines comerciales, manteniendo el aviso de copyright.
+
+## Aviso legal
+
+Este software se ofrece **tal cual**, sin garantías de ningún tipo (ver [LICENSE](LICENSE)). El autor no se hace responsable de ningún daño, pérdida ni reclamación derivados de su uso.
+
+- **No incluye, aloja ni distribuye contenido.** Es una herramienta técnica que solo se conecta a los servicios que configura cada usuario en su propia instalación.
+- **Cada usuario es el único responsable** de cómo lo usa y de cumplir la legislación aplicable (incluida la de propiedad intelectual) y las normas de los servicios y hubs a los que se conecta. Úsalo solo con contenido que tengas derecho a descargar o reproducir.
+- **No está afiliado** a AirDC++, Stremio, Nuvio, Radarr, Sonarr, TMDB, TVmaze ni a ningún otro proyecto o marca mencionado, ni cuenta con su respaldo. Los nombres pertenecen a sus respectivos titulares.
+
+*This software is provided "as is", without warranty of any kind. It does not include, host or distribute any content. Users are solely responsible for how they use it and for complying with applicable laws and the terms of the services they connect to. Not affiliated with or endorsed by any of the projects mentioned.*
+
 ## Apoyar el proyecto
 
 Si te resulta útil, puedes invitarme a un café: [buymeacoffee.com/jmoruno](https://buymeacoffee.com/jmoruno) ☕
