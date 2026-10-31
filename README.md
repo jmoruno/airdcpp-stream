@@ -15,6 +15,21 @@ Addon de Stremio y Nuvio que busca en los hubs de AirDC++ (a través de
 
 ## Desplegar en Unraid (Portainer)
 
-- Stack con `docker-compose.unraid.yml` (imagen `jmorunofdz/airdcpp-stream:latest`, la publica GitHub Actions en cada push a `main`).
+- Stack con `docker-compose.unraid.yml` (imagen `jmorunofdz/airdcpp-stream:latest`).
 - Variables del stack: las de `.env.example`.
 - Instalar en Stremio o Nuvio: `https://<PUBLIC_URL>/<TOKEN>/manifest.json`.
+
+## Imagen y versiones
+
+| Etiqueta | Cuándo se publica | Para qué |
+| --- | --- | --- |
+| `latest` | Al publicar una versión | Producción |
+| `X.Y.Z` | Al publicar una versión | Fijar una versión concreta o volver atrás |
+| `<rama>` (p. ej. `dev`) | En cada push a esa rama | Probar sin tocar producción (otro stack, otro puerto) |
+| `sha-<commit>` | En cada build | Una build exacta |
+
+Flujo de trabajo:
+
+1. Los cambios se hacen en una rama. Cada push publica `:<rama>`.
+2. Cuando funciona, se fusiona en `main`.
+3. Para publicar una versión: **Actions → Imagen Docker → Run workflow** en `main`, con el número de versión. Crea la etiqueta `vX.Y.Z` y la release en GitHub, y publica `:X.Y.Z` y `:latest`.
