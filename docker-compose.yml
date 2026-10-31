@@ -39,7 +39,10 @@ services:
       - SONARR_PROFILE=Español 4k/1080p
 
       # --- Comportamiento ---
-      - SPANISH_ONLY=true
+      # Idioma de los textos en Stremio/Nuvio: es | en
+      - LANGUAGE=${LANGUAGE:-es}
+      # Solo resultados en castellano (por defecto true con LANGUAGE=es y false con LANGUAGE=en)
+      - SPANISH_ONLY=${SPANISH_ONLY:-true}
       - MAX_RESULTS=15
       # Capitulos siguientes que se buscan por adelantado al abrir uno
       - PREFETCH_EPISODES=2

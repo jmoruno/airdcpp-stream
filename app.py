@@ -55,7 +55,9 @@ REGISTER_IN_ARR = os.environ.get("REGISTER_IN_ARR", "true").lower() == "true"
 RADARR_PROFILE = os.environ.get("RADARR_PROFILE", "")
 SONARR_PROFILE = os.environ.get("SONARR_PROFILE", "")
 
-SPANISH_ONLY = os.environ.get("SPANISH_ONLY", "true").lower() == "true"
+# Idioma de los textos que se ven en Stremio/Nuvio: "es" (castellano) o "en" (ingles)
+LANGUAGE = "en" if os.environ.get("LANGUAGE", "es").lower().startswith("en") else "es"
+SPANISH_ONLY = os.environ.get("SPANISH_ONLY", "true" if LANGUAGE == "es" else "false").lower() == "true"
 MAX_RESULTS = int(os.environ.get("MAX_RESULTS", "15"))
 SEARCH_WAIT = float(os.environ.get("SEARCH_WAIT", "15"))
 PREFETCH_EPISODES = int(os.environ.get("PREFETCH_EPISODES", "2"))
@@ -75,11 +77,40 @@ RES_RE = re.compile(r"\b(2160p|4k|uhd|1080p|720p|576p|480p)\b", re.I)
 RES_RANK = {"2160p": 4, "4k": 4, "uhd": 4, "1080p": 3, "720p": 2, "576p": 1, "480p": 1}
 TORZNAB = "{http://torznab.com/schemas/2015/feed}"
 
+TEXTS = {
+    "es": {
+        "description": "Reproduce desde tus hubs de AirDC++ mientras se descarga.",
+        "res_folder": "según la carpeta",
+        "still_searching": "🔄 Sigue buscando en tus hubs… ({n} encontrado(s) hasta ahora)\nVuelve a abrir para ver más",
+        "no_results_spanish": "Sin ficheros sueltos en español en tus hubs",
+        "no_results": "Sin ficheros sueltos en tus hubs",
+        "library": "📁 Biblioteca\n✅ Ya lo tienes",
+        "instant": "▶️ Reproducción inmediata",
+        "downloaded": "✅ Ya descargado: reproducción inmediata",
+        "gone": "El fichero ya no está en la biblioteca",
+        "bridge_failed": "el bridge no pudo iniciar la descarga (HTTP {code})",
+        "not_created": "AirDC++ no ha creado la descarga",
+    },
+    "en": {
+        "description": "Streams from your AirDC++ hubs while downloading.",
+        "res_folder": "from folder name",
+        "still_searching": "🔄 Still searching your hubs… ({n} found so far)\nOpen again to see more",
+        "no_results_spanish": "No Spanish single files in your hubs",
+        "no_results": "No single files in your hubs",
+        "library": "📁 Library\n✅ Already in your library",
+        "instant": "▶️ Instant playback",
+        "downloaded": "✅ Already downloaded: instant playback",
+        "gone": "The file is no longer in the library",
+        "bridge_failed": "the bridge could not start the download (HTTP {code})",
+        "not_created": "AirDC++ did not create the download",
+    },
+}[LANGUAGE]
+
 MANIFEST = {
     "id": "local.airdcpp.stream",
     "version": "1.0.0",
     "name": "AirDC++",
-    "description": "Reproduce desde tus hubs de AirDC++ mientras se descarga.",
+    "description": TEXTS["description"],
     "resources": ["stream"],
     "types": ["movie", "series"],
     "idPrefixes": ["tt"],
@@ -104,6 +135,7 @@ def human(size):
         if size < 1024 or unit == "TB":
             return f"{size:.1f} {unit}" if unit not in ("B", "KB") else f"{size:.0f} {unit}"
         size /= 1024
+    return f"{size:.1f} TB"
 
 
 CINEMETA_URL = os.environ.get("CINEMETA_URL", "https://v3-cinemeta.strem.io").rstrip("/")
@@ -192,7 +224,7 @@ def to_stream(kind, result, imdb_id):
     if result["languages"]:
         info += "   🗣 " + ", ".join(result["languages"])
     if result.get("res_folder"):
-        info += f"\n📁 {result['res']} según la carpeta"
+        info += f"\n📁 {result['res']} {TEXTS['res_folder']}"
     return {
         "name": f"AirDC++\n{result['res'] or '?'}{flag}",
         "title": f"{result['title']}\n{info}",
@@ -248,8 +280,7 @@ def cached_search(kind, imdb_id, season=None, episode=None, wait=True):
             log(f"No se pudieron leer los resultados parciales: {exc}")
             found = []
         notice = {"name": "AirDC++",
-                  "title": (f"🔄 Sigue buscando en tus hubs… ({len(found)} encontrado(s) hasta ahora)\n"
-                            "Vuelve a abrir para ver más"),
+                  "title": TEXTS["still_searching"].format(n=len(found)),
                   "externalUrl": PUBLIC_URL}
         return [notice] + found, True
     if entry["error"]:
@@ -334,6 +365,26 @@ def register_in_arr(kind, imdb_id):
         log(f"No se pudo registrar {kind} {imdb_id} en Radarr/Sonarr: {exc}")
 
 
+def safe_join(root, name):
+    """Ruta de `name` dentro de `root`, o None si intenta salirse (../, rutas absolutas...)."""
+    base = os.path.realpath(root)
+    full = os.path.realpath(os.path.join(base, name))
+    return full if full.startswith(base + os.sep) else None
+
+
+def library_roots():
+    return [os.path.realpath(dst) for _, dst in PATH_MAP]
+
+
+def in_library(path):
+    """Ruta real si esta dentro de alguna carpeta de la biblioteca (PATH_MAP), si no None."""
+    real = os.path.realpath(path)
+    for root in library_roots():
+        if real.startswith(root + os.sep):
+            return real
+    return None
+
+
 def local_path(path):
     for src, dst in PATH_MAP:
         src = src.rstrip("/")
@@ -375,9 +426,9 @@ def library_stream(path, size):
     encoded = base64.urlsafe_b64encode(path.encode()).decode()
     name = os.path.basename(path)
     return {
-        "name": "📁 Biblioteca\n✅ Ya lo tienes",
-        "title": f"{name}\n💾 {human(size)}   ▶️ Reproducción inmediata",
-        "description": f"{name}\n💾 {human(size)}   ▶️ Reproducción inmediata",
+        "name": TEXTS["library"],
+        "title": f"{name}\n💾 {human(size)}   {TEXTS['instant']}",
+        "description": f"{name}\n💾 {human(size)}   {TEXTS['instant']}",
         "url": f"{PUBLIC_URL}/{TOKEN}/local/{sign(encoded)}/{encoded}",
         "behaviorHints": {"notWebReady": True, "filename": name, "videoSize": size, "bingeGroup": "airdcpp-local"},
     }
@@ -388,10 +439,11 @@ def mark_downloaded(kind, streams):
     marked = []
     for stream in streams:
         filename = (stream.get("behaviorHints") or {}).get("filename")
-        if filename and os.path.isfile(f"{BRIDGES[kind]['save_path']}/{filename}"):
+        downloaded = filename and safe_join(BRIDGES[kind]["save_path"], filename)
+        if downloaded and os.path.isfile(downloaded):
             stream = dict(stream, name=stream["name"] + " ✅",
-                          title="✅ Ya descargado: reproducción inmediata\n" + stream["title"],
-                          description="✅ Ya descargado: reproducción inmediata\n" + stream["title"])
+                          title=TEXTS["downloaded"] + "\n" + stream["title"],
+                          description=TEXTS["downloaded"] + "\n" + stream["title"])
         marked.append(stream)
     return marked
 
@@ -484,15 +536,39 @@ def adc(path):
     return json.loads(http("GET", f"{AIRDCPP_URL}/api/v1/{path}", headers={"Authorization": AIRDCPP_AUTH}, timeout=30))
 
 
+_bridge_sids = {}
+
+
+def bridge_sid(kind, renew=False):
+    """Inicia sesion en la API qBittorrent del bridge y guarda la cookie SID."""
+    if renew or kind not in _bridge_sids:
+        body = urllib.parse.urlencode({"username": BRIDGE_USER, "password": BRIDGE_PASS}).encode()
+        req = urllib.request.Request(f"{BRIDGES[kind]['url']}/api/v2/auth/login", data=body, method="POST",
+                                     headers={"Content-Type": "application/x-www-form-urlencoded"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            cookie = resp.headers.get("Set-Cookie") or ""
+        match = re.search(r"SID=([^;]+)", cookie)
+        if not match:
+            raise RuntimeError("login en el bridge rechazado")
+        _bridge_sids[kind] = match.group(1)
+    return _bridge_sids[kind]
+
+
 def bridge_add(kind, release_id):
     bridge = BRIDGES[kind]
-    sid = hashlib.sha256(f"{BRIDGE_USER}:{BRIDGE_PASS}".encode()).hexdigest()
     body = urllib.parse.urlencode({"urls": f"magnet:?xt=urn:btih:{release_id}", "category": CATEGORY}).encode()
     try:
-        http("POST", f"{bridge['url']}/api/v2/torrents/add", data=body, timeout=120, headers={
-            "Cookie": f"SID={sid}", "Content-Type": "application/x-www-form-urlencoded"})
+        for attempt in range(2):
+            try:
+                http("POST", f"{bridge['url']}/api/v2/torrents/add", data=body, timeout=120, headers={
+                    "Cookie": f"SID={bridge_sid(kind, renew=attempt > 0)}",
+                    "Content-Type": "application/x-www-form-urlencoded"})
+                return
+            except urllib.error.HTTPError as exc:
+                if exc.code != 403 or attempt:
+                    raise
     except urllib.error.HTTPError as exc:
-        raise RuntimeError(f"el bridge no pudo iniciar la descarga (HTTP {exc.code})") from exc
+        raise RuntimeError(TEXTS["bridge_failed"].format(code=exc.code)) from exc
 
 
 class Session:
@@ -500,7 +576,9 @@ class Session:
 
     def __init__(self, kind, release_id, size, name):
         self.kind, self.release_id, self.size, self.name = kind, release_id, size, name
-        self.target = f"{BRIDGES[kind]['save_path']}/{name}"
+        self.target = safe_join(BRIDGES[kind]["save_path"], name)
+        if self.target is None:
+            raise ValueError("nombre de fichero no valido")
         self.lock = threading.Lock()
         self.started = False
         self.file_id = None
@@ -537,7 +615,7 @@ class Session:
                     time.sleep(1)
                     queued = self.find_file()
                 if not queued:
-                    raise RuntimeError("AirDC++ no ha creado la descarga")
+                    raise RuntimeError(TEXTS["not_created"])
             if queued:
                 self.file_id = queued["id"]
             else:
@@ -704,7 +782,7 @@ class Handler(BaseHTTPRequestHandler):
             if local:
                 streams = [library_stream(*local)] + [s for s in streams if s.get("url")]
             if not streams:
-                streams, partial = [{"name": "AirDC++", "title": "Sin ficheros sueltos en español en tus hubs",
+                streams, partial = [{"name": "AirDC++", "title": TEXTS["no_results_spanish" if SPANISH_ONLY else "no_results"],
                                      "externalUrl": PUBLIC_URL}], True
             log(f"stream {kind} {item_id}: {len(streams)} resultado(s){' (parcial)' if partial else ''}")
             return self.send_json({"streams": streams, "cacheMaxAge": 0 if partial else 600})
@@ -733,9 +811,11 @@ class Handler(BaseHTTPRequestHandler):
         """Sirve un fichero de la biblioteca (ruta firmada, no se puede pedir cualquier fichero)."""
         if not hmac.compare_digest(signature, sign(encoded)):
             return self.text(403, "Forbidden")
-        path = base64.urlsafe_b64decode(encoded.encode()).decode()
+        path = in_library(base64.urlsafe_b64decode(encoded.encode()).decode())
+        if path is None:
+            return self.text(403, "Forbidden")
         if not os.path.isfile(path):
-            return self.text(404, "El fichero ya no está en la biblioteca")
+            return self.text(404, TEXTS["gone"])
         size = os.path.getsize(path)
         ctype = "video/mp4" if path.lower().endswith((".mp4", ".m4v")) else "video/x-matroska"
         start, end, ranged = self.parse_range(size)
@@ -746,7 +826,7 @@ class Handler(BaseHTTPRequestHandler):
             headers["Content-Range"] = f"bytes {start}-{end}/{size}"
         self.head(206 if ranged else 200, ctype, end - start + 1, headers)
         if head_only:
-            return
+            return None
         try:
             with open(path, "rb") as handle:
                 handle.seek(start)
@@ -758,9 +838,14 @@ class Handler(BaseHTTPRequestHandler):
                     self.wfile.write(chunk)
                     remaining -= len(chunk)
         except (BrokenPipeError, ConnectionResetError):
+            # El reproductor ha cerrado la conexion (pausa, salto o salida): no es un error
             pass
+        return None
 
     def play(self, kind, release_id, size, name, head_only):
+        if kind not in BRIDGES or not re.fullmatch(r"[A-Za-z0-9]{1,64}", release_id) \
+                or name != os.path.basename(name) or name in ("", ".", "..") or "\x00" in name:
+            return self.text(400, "Bad request")
         ctype = "video/mp4" if name.lower().endswith((".mp4", ".m4v")) else "video/x-matroska"
         start, end = 0, size - 1
         ranged = False
@@ -798,7 +883,7 @@ class Handler(BaseHTTPRequestHandler):
         log(f"sirviendo {name} desde {start} (disponible {session.available})")
         self.head(206 if ranged else 200, ctype, end - start + 1, headers)
         if head_only:
-            return
+            return None
 
         patches = session.header_patches() if not session.complete else []
         position, stalled = start, time.monotonic()
@@ -824,11 +909,13 @@ class Handler(BaseHTTPRequestHandler):
                 position += len(chunk)
                 stalled = session.last_used = time.monotonic()
         except (BrokenPipeError, ConnectionResetError):
+            # El reproductor ha cerrado la conexion (pausa, salto o salida): no es un error
             pass
         finally:
             with session.lock:
                 session.active -= 1
                 session.last_used = time.monotonic()
+        return None
 
 
 if __name__ == "__main__":

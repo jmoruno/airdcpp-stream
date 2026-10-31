@@ -11,6 +11,13 @@ Addon de Stremio y Nuvio que busca en los hubs de AirDC++ (a través de
 - Si Radarr o Sonarr ya tienen el fichero, aparece "📁 Biblioteca" y se reproduce desde el disco.
 - Numeración absoluta para anime (Cinemeta) y búsqueda adelantada de los capítulos siguientes.
 
+## Idioma
+
+| Variable | Por defecto | Para qué |
+| --- | --- | --- |
+| `LANGUAGE` | `es` | Idioma de los textos en Stremio y Nuvio: `es` o `en` |
+| `SPANISH_ONLY` | `true` con `es`, `false` con `en` | Mostrar solo resultados en castellano |
+
 ## Limitaciones
 
 - MP4 o AVI con el índice al final no empiezan hasta que se descarga el fichero entero.
